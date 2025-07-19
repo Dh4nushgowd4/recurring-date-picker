@@ -1,0 +1,95 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+
+/* CSS Variables for Theme */
+:root {
+  --background: #ffe4e6; /* soft pink */
+  --foreground: #1f2937; /* dark gray */
+  --primary: #ec4899;    /* fuchsia */
+  --secondary: #f59e0b;  /* amber */
+  --accent: #10b981;     /* emerald */
+
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: 'Inter', 'Segoe UI', sans-serif;
+  --font-mono: 'Fira Code', monospace;
+}
+
+/* Dark mode theme */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #111827;
+    --foreground: #f3f4f6;
+    --primary: #d946ef;
+    --secondary: #fbbf24;
+    --accent: #34d399;
+  }
+}
+
+/* Global Styles */
+body {
+  background-color: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans);
+  line-height: 1.625;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+
+/* Utility container class */
+.container {
+  max-width: 56rem;           /* Tailwind: max-w-4xl */
+  margin-left: auto;          /* Tailwind: mx-auto */
+  margin-right: auto;
+  padding: 1.5rem;            /* Tailwind: p-6 */
+  border-radius: 1rem;        /* Tailwind: rounded-2xl */
+  border-width: 1px;          /* Tailwind: border */
+  background-color: white;    /* Tailwind: bg-white */
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1),
+              0 4px 6px -4px rgba(0, 0, 0, 0.1); /* Tailwind: shadow-lg */
+
+  /* Custom variables */
+  border-color: var(--primary);
+  background-color: var(--background);
+  color: var(--foreground);
+}
+
+
+/* Example headers */
+h1,
+h2,
+h3 {
+  font-weight: 700;          /* Tailwind: font-bold */
+  letter-spacing: 0.025em;   /* Tailwind: tracking-wide */
+  margin-bottom: 1rem;       /* Tailwind: mb-4 */
+  color: var(--primary);     /* Custom variable */
+}
+
+
+/* Paragraphs */
+p {
+  margin-bottom: 1rem;   /* Tailwind: mb-4 */
+  font-size: 1rem;       /* Tailwind: text-base (16px) */
+  line-height: 1.5rem;   /* Tailwind: default line height for text-base */
+}
+
+/* Buttons */
+.button {
+  display: inline-block;
+  padding-left: 1rem;    /* px-4 */
+  padding-right: 1rem;
+  padding-top: 0.5rem;   /* py-2 */
+  padding-bottom: 0.5rem;
+  background-color: var(--primary);
+  color: white;
+  border-radius: 0.5rem; /* rounded-lg */
+  transition: background-color 300ms; /* transition duration-300 */
+}
+
+.button:hover {
+  background-color: var(--secondary);
+}
+
