@@ -1,242 +1,141 @@
 'use client';
 
-import React, { useState } from 'react';
+import { useState } from 'react';
+import { getRecurringDates } from '@/utils/getRecurringDates';
+import RecurringPreview from './RecurringPreview';
 
-type RecurrenceType = 'daily' | 'weekly' | 'monthly' | 'yearly';
-type CustomizationUnit = 'day' | 'week' | 'month' | 'year';
+export default function RecurringDatePicker() {
+  const [startDate, setStartDate] = useState('');
+  const [frequency, setFrequency] = useState<'daily' | 'weekly' | 'monthly' | 'yearly'>('daily');
+  const [interval, setInterval] = useState(1);
+  const [endDate, setEndDate] = useState('');
+  const [occurrences, setOccurrences] = useState('');
+  const [selectedDays, setSelectedDays] = useState<number[]>([]);
+  const [dates, setDates] = useState<string[]>([]);
+  const [error, setError] = useState('');
 
-function RecurrenceOptions({
-  value,
-  onChange,
-}: {
-  value: RecurrenceType;
-  onChange: (value: RecurrenceType) => void;
-}) {
-  return (
-    <div className="flex flex-col space-y-2">
-      <label htmlFor="frequency" className="font-medium text-gray-700">
-        Repeat Frequency:
-      </label>
-      <select
-        id="frequency"
-        value={value}
-        onChange={(e) => onChange(e.target.value as RecurrenceType)}
-        className="border rounded px-3 py-2 w-full max-w-xs"
-      >
-        <option value="daily">Daily</option>
-        <option value="weekly">Weekly</option>
-        <option value="monthly">Monthly</option>
-        <option value="yearly">Yearly</option>
-      </select>
-    </div>
-  );
-}
-
-// Dummy stubs for other components (replace with real ones as needed)
-function CustomizationControls({
-  unit,
-  value,
-  onChange,
-}: {
-  unit: CustomizationUnit;
-  value: number;
-  onChange: (val: number) => void;
-}) {
-  return (
-    <div className="flex space-x-2">
-      <label className="font-medium text-gray-700">Repeat every</label>
-      <input
-        type="number"
-        min={1}
-        value={value}
-        onChange={(e) => onChange(Number(e.target.value))}
-        className="border rounded px-3 py-1 w-16"
-      />
-      <span>{unit + (value > 1 ? 's' : '')}</span>
-    </div>
-  );
-}
-
-function DaySelector({
-  selectedDays,
-  onChange,
-}: {
-  selectedDays: number[];
-  onChange: (days: number[]) => void;
-}) {
-  const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-  const toggle = (index: number) => {
-    if (selectedDays.includes(index)) {
-      onChange(selectedDays.filter((d) => d !== index));
-    } else {
-      onChange([...selectedDays, index]);
-    }
+  const handleCheckbox = (dayIndex: number) => {
+    setSelectedDays((prev) =>
+      prev.includes(dayIndex) ? prev.filter((d) => d !== dayIndex) : [...prev, dayIndex]
+    );
   };
-  return (
-    <div className="flex space-x-2">
-      {days.map((day, i) => (
-        <button
-          key={i}
-          onClick={() => toggle(i)}
-          className={`px-2 py-1 rounded ${
-            selectedDays.includes(i) ? 'bg-blue-500 text-white' : 'bg-gray-200'
-          }`}
-        >
-          {day}
-        </button>
-      ))}
-    </div>
-  );
-}
 
-function PatternSelector({
-  value,
-  onChange,
-}: {
-  value: string;
-  onChange: (v: string) => void;
-}) {
-  return (
-    <div>
-      <label className="font-medium text-gray-700">Monthly Pattern:</label>
-      <select
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        className="border rounded px-3 py-2 w-full max-w-xs mt-1"
-      >
-        <option value="first-monday">First Monday</option>
-        <option value="second-tuesday">Second Tuesday</option>
-        <option value="last-friday">Last Friday</option>
-      </select>
-    </div>
-  );
-}
+  const handleGenerate = () => {
+    setError('');
+    const maxOccurrences = occurrences ? parseInt(occurrences) : undefined;
 
-function DateRangePicker({
-  startDate,
-  endDate,
-  onChange,
-}: {
-  startDate: string;
-  endDate: string;
-  onChange: (start: string, end: string) => void;
-}) {
+    if (!startDate || (!endDate && !maxOccurrences)) {
+      setError('Start Date and either End Date or Occurrences are required.');
+      return;
+    }
+
+    if (frequency === 'weekly' && selectedDays.length === 0) {
+      setError('Select at least one weekday for weekly recurrence.');
+      return;
+    }
+
+    const result = getRecurringDates({
+      start: new Date(startDate),
+      frequency,
+      interval,
+      endDate: endDate ? new Date(endDate) : undefined,
+      maxOccurrences,
+      selectedDays,
+    });
+
+    setDates(result);
+  };
+
   return (
-    <div className="space-y-2">
+    <div className="max-w-xl mx-auto p-6 bg-white shadow rounded space-y-4">
+      <h2 className="text-xl font-semibold">Recurring Date Picker</h2>
+
       <div>
-        <label>Start Date:</label>
+        <label className="block font-medium">Frequency</label>
+        <select
+          value={frequency}
+          onChange={(e: React.ChangeEvent<HTMLSelectElement>) =>
+            setFrequency(e.target.value as 'daily' | 'weekly' | 'monthly' | 'yearly')
+          }
+          className="border px-2 py-1 rounded w-full"
+        >
+          <option value="daily">Daily</option>
+          <option value="weekly">Weekly</option>
+          <option value="monthly">Monthly</option>
+          <option value="yearly">Yearly</option>
+        </select>
+      </div>
+
+      {frequency === 'weekly' && (
+        <div>
+          <label className="block font-medium mb-1">Repeat on</label>
+          <div className="flex flex-wrap gap-2">
+            {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((day, i) => (
+              <label key={day} className="flex items-center space-x-1">
+                <input
+                  type="checkbox"
+                  checked={selectedDays.includes(i)}
+                  onChange={() => handleCheckbox(i)}
+                />
+                <span>{day}</span>
+              </label>
+            ))}
+          </div>
+        </div>
+      )}
+
+      <div>
+        <label className="block font-medium">Interval</label>
+        <input
+          type="number"
+          value={interval}
+          min={1}
+          onChange={(e: React.ChangeEvent<HTMLInputElement>) => setInterval(Number(e.target.value))}
+          className="border px-2 py-1 rounded w-full"
+        />
+      </div>
+
+      <div>
+        <label className="block font-medium">Start Date</label>
         <input
           type="date"
           value={startDate}
-          onChange={(e) => onChange(e.target.value, endDate)}
-          className="border rounded px-3 py-2 w-full max-w-xs"
+          onChange={(e: React.ChangeEvent<HTMLInputElement>) => setStartDate(e.target.value)}
+          className="border px-2 py-1 rounded w-full"
         />
       </div>
+
       <div>
-        <label>End Date:</label>
+        <label className="block font-medium">End Date (optional)</label>
         <input
           type="date"
           value={endDate}
-          onChange={(e) => onChange(startDate, e.target.value)}
-          className="border rounded px-3 py-2 w-full max-w-xs"
+          onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEndDate(e.target.value)}
+          className="border px-2 py-1 rounded w-full"
         />
       </div>
+
+      <div>
+        <label className="block font-medium">Or End After N Occurrences</label>
+        <input
+          type="number"
+          value={occurrences}
+          min={1}
+          onChange={(e: React.ChangeEvent<HTMLInputElement>) => setOccurrences(e.target.value)}
+          className="border px-2 py-1 rounded w-full"
+        />
+      </div>
+
+      {error && <p className="text-red-500 text-sm">{error}</p>}
+
+      <button
+        onClick={handleGenerate}
+        className="mt-2 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+      >
+        Generate Dates
+      </button>
+
+      {dates.length > 0 && <RecurringPreview dates={dates} />}
     </div>
-  );
-}
-
-function CalendarPreview({
-  recurrenceType,
-  interval,
-  selectedDays,
-  pattern,
-  startDate,
-  endDate,
-}: {
-  recurrenceType: RecurrenceType;
-  interval: number;
-  selectedDays: number[];
-  pattern: string;
-  startDate: string;
-  endDate: string;
-}) {
-  return (
-    <div className="border rounded p-4 bg-gray-100">
-      <p>
-        <strong>Preview:</strong> {recurrenceType} every {interval}x
-      </p>
-      <p>Start: {startDate || 'N/A'}</p>
-      <p>End: {endDate || 'N/A'}</p>
-    </div>
-  );
-}
-
-function RecurringDatePicker() {
-  const [recurrenceType, setRecurrenceType] = useState<RecurrenceType>('weekly');
-  const [interval, setInterval] = useState(1);
-  const [selectedDays, setSelectedDays] = useState<number[]>([]);
-  const [monthlyPattern, setMonthlyPattern] = useState<string>('second-tuesday');
-  const [startDate, setStartDate] = useState('');
-  const [endDate, setEndDate] = useState('');
-
-  const convertToUnit = (type: RecurrenceType): CustomizationUnit => {
-    switch (type) {
-      case 'daily':
-        return 'day';
-      case 'weekly':
-        return 'week';
-      case 'monthly':
-        return 'month';
-      case 'yearly':
-        return 'year';
-    }
-  };
-
-  return (
-    <div className="p-6 max-w-xl mx-auto bg-white rounded-xl shadow-md space-y-4">
-      <h1 className="text-2xl font-bold">Recurring Date Picker</h1>
-
-      <RecurrenceOptions value={recurrenceType} onChange={setRecurrenceType} />
-
-      <CustomizationControls
-        unit={convertToUnit(recurrenceType)}
-        value={interval}
-        onChange={setInterval}
-      />
-
-      {recurrenceType === 'weekly' && (
-        <DaySelector selectedDays={selectedDays} onChange={setSelectedDays} />
-      )}
-
-      {recurrenceType === 'monthly' && (
-        <PatternSelector value={monthlyPattern} onChange={setMonthlyPattern} />
-      )}
-
-      <DateRangePicker
-        startDate={startDate}
-        endDate={endDate}
-        onChange={(start, end) => {
-          setStartDate(start);
-          setEndDate(end);
-        }}
-      />
-
-      <CalendarPreview
-        recurrenceType={recurrenceType}
-        interval={interval}
-        selectedDays={selectedDays}
-        pattern={monthlyPattern}
-        startDate={startDate}
-        endDate={endDate}
-      />
-    </div>
-  );
-}
-
-export default function Home() {
-  return (
-    <main className="p-8">
-      <RecurringDatePicker />
-    </main>
   );
 }
